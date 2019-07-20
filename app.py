@@ -4,7 +4,7 @@ import numpy as np
 import random
 
 # 次元数など
-xN = 10
+xN = 1000
 yN = 1
 term_num = 3    # 基底関数での説明変数一つ当たりの項数
 
@@ -53,24 +53,26 @@ def online_func_forward(phi, W):
 
 # オンライン学習器 逆方向含む学習
 def online_func_learning(phi, t, W):
+    # ∇E = sum(tφ) - sum(wφ^2) + λw = sum((t - wφ)φ)
     # 式 W' = W + η(t - Wφ)φ
     # η = 1 / dot(φ, φ) なら η(t - Wφ)φ = (t - y) * φT / dot(φ, φ)
     y   = online_func_forward(phi, W)
-    eta = 0.5 / np.dot(phi, phi)
-    new_W = W + eta * (t - y) * phi
+    eta = 1 / np.dot(phi, phi)
+    r   = 0.1 * W
+    new_W = W + eta * (t - y) * phi - r
     return y, new_W
 
 # 学習プロセス
 def learning(W):
     # プロット回数の決定
-    count = 200
+    count = 1000
     # データ対の保存場所
     try_y    = np.array([0] * count, dtype=float)
     teach_t  = np.array([0] * count, dtype=float)
     # 学習
     for i in range(count):
         # 入力と正解のデータを適当に生成
-        x   = np.array([2 * random.random() for _ in range(xN)], dtype=float)
+        x   = np.array([4 * random.random() - 2 for _ in range(xN)], dtype=float)
         phi = basis_func(x)
         t   = correct_func(x) + 0.5 * random.random()
         # 学習器に読ませる
@@ -79,7 +81,8 @@ def learning(W):
         try_y[i]   = y
         teach_t[i] = t
     # プロット
-    plt.scatter(np.array(range(count)), teach_t - try_y, s=8)
+    cutoff = 40
+    plt.scatter(np.array(range(cutoff, count)), (teach_t - try_y)[cutoff:] ** 2, s=8)
     plt.show()
 
 # 実行
