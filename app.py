@@ -6,7 +6,8 @@ import random
 # 次元数など
 xN = 3
 yN = 1
-term_num = 3    # 基底関数での説明変数一つ当たりの項数
+term_num = 3        # 基底関数での説明変数一つ当たりの項数
+batch_size = 10     # バッチ学習でのバッチの大きさ
 
 # 正解の関数
 def correct_func(x):
@@ -79,8 +80,6 @@ def online_func_learning(phi, t, W):
     y   = online_func_forward(phi, W)
     eta = 0.8 / np.dot(phi, phi)
     r   = 0.2 * W
-    # r_b = np.zeros((1,xN * term_num + 1), dtype=float)
-    # r_b[-1] = W[-1] * 0.6
     new_W = W + eta * (t - y) * phi - r
     return y, new_W
 
@@ -113,11 +112,56 @@ def learning(W):
     plt.show()
     return W
 
+# オンラインバッチ学習器 逆方向含む学習
+def online_func_batch_learning(phi, t, W):
+    y   = [ online_func_forward(phi[i], W)  for i in range(batch_size) ]
+    eta = [ 0.8 / np.dot(phi[i], phi[i])    for i in range(batch_size) ]
+    r   = 0.2 * W
+    # バッチの総和
+    sum_e = None
+    for i in range(batch_size):
+        if sum_e is None:
+            sum_e = eta[i] * (t[i] - y[i]) * phi[i]
+        else:
+            sum_e += eta[i] * (t[i] - y[i]) * phi[i]
+    # 更新
+    new_W = W + 1 / batch_size * sum_e - r
+    return y, new_W
+
+# ミニバッチ学習プロセス
+def batch_learning(W):
+    # プロット回数の決定
+    count = 10000
+    # データ対の保存場所
+    try_y    = np.array([0] * count, dtype=float)
+    learn_y  = np.array([0] * count, dtype=float)
+    teach_t  = np.array([0] * count, dtype=float)
+    # 学習
+    for i in range(count):
+        # 入力と正解のデータを適当に生成
+        x   = [ np.array([2 * random.random() - 1 for _ in range(xN)], dtype=float) for _ in range(batch_size) ]
+        phi = [ basis_func(x[i])                                                    for i in range(batch_size) ]
+        t   = [ correct_func(x[i]) + 0 * random.random()                            for i in range(batch_size) ]
+        # 学習器に読ませる
+        y, W = online_func_batch_learning(phi, t, W)
+        # データ対の保存
+        try_y[i]   = y[0]
+        teach_t[i] = t[0]
+        learn_y[i] = online_func_forward(phi[0], W)
+    # プロット
+    cutoff = 40
+    plt.scatter(np.array(range(cutoff, count)), ((teach_t - try_y))[cutoff:], s=8)
+    plt.show()
+    plt.scatter(np.array(range(count-100, count)), teach_t[count-100:], s=10)
+    plt.plot(np.array(range(count-100, count)), learn_y[count-100:], color="red")
+    plt.show()
+    return W
+
 # 実行
 if __name__ == "__main__":
     # 関数の概形表示
     # plot_correct_func()
     # 学習する重みWを用意して学習
     learn_W = np.array([random.random() for _ in range(xN * term_num + 1)], dtype=float)
-    learn_W = learning(learn_W)
+    learn_W = batch_learning(learn_W)
     plot_learned_func(learn_W)
