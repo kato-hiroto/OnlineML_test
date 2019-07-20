@@ -86,7 +86,7 @@ def online_func_learning(phi, t, W):
 # 学習プロセス
 def learning(W):
     # 学習回数の決定
-    count = 10000
+    count = 1
     # データ対の保存場所
     try_y    = np.array([0] * count, dtype=float)
     learn_y  = np.array([0] * count, dtype=float)
@@ -131,7 +131,7 @@ def online_func_batch_learning(phi, t, W):
 # ミニバッチ学習プロセス
 def batch_learning(W):
     # 学習回数の決定
-    count = 500
+    count = 100
     # データ対の保存場所
     try_y    = np.array([0] * count, dtype=float)
     learn_y  = np.array([0] * count, dtype=float)

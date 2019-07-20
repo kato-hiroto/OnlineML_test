@@ -11,7 +11,7 @@ import math
 import numpy as np
 import random
 
-xN = 1000
+xN = 3
 count = 10000
 X = [None] * count
 y = [None] * count
@@ -65,8 +65,8 @@ y_te = y[sep:]
 
 print("ytr", y_tr[:10])
 
-batch_size = 50
-iterations = 10
+batch_size = 10
+iterations = 100
 model = None
 for i in range(iterations):
     for start in range(0, len(x_tr), batch_size):
@@ -84,6 +84,9 @@ for i in range(iterations):
         y_pr = model.predict(xgb.DMatrix(x_te))
         #print('    MSE itr@{}: {}'.format(int(start/batch_size), sklearn.metrics.mean_squared_error(y_te, y_pr)))
     print('MSE itr@{}: {}'.format(i, sklearn.metrics.mean_squared_error(y_te, y_pr)))
+    plot_correct_func()
+    plot_learned_func(model)
+    plt.show()
 
 y_pr = model.predict(xgb.DMatrix(x_te))
 print('MSE at the end: {}'.format(sklearn.metrics.mean_squared_error(y_te, y_pr)))
