@@ -4,16 +4,16 @@ import numpy as np
 import random
 
 # 次元数など
-xN = 1000
+xN = 5
 yN = 1
-term_num = 3    # 基底関数での説明変数一つ当たりの項数
+term_num = 7    # 基底関数での説明変数一つ当たりの項数
 
 # 正解の関数
 def correct_func(x):
     # 重みを適当に決定
     w = np.array([math.sin((i + 1) * 607.0 / 991.0) for i in range(xN)], dtype=float)
     # 式 y = cos(dot(w, x))
-    y = math.cos(np.dot(w, x))
+    y = math.cos(0.5 * math.pi * np.dot(w, x))
     return y
 
 # 関数の描画 説明変数はx=0のみ
@@ -23,7 +23,7 @@ def plot_correct_func():
     plt_x = np.array([0] * count, dtype=float)
     plt_y = np.array([0] * count, dtype=float)
     for i in range(count):
-        x = np.array([i * 0.4 - 2] * 10, dtype=float)
+        x = np.array([i * 0.02 - 1] * xN, dtype=float)
         y = correct_func(x)
         plt_x[i] = x[0]
         plt_y[i] = y
@@ -37,14 +37,14 @@ def basis_func(x):
     for i in range(xN):
         for j in range(term_num):
             # 多項式近似
-            ret_vec[3 * i + j] = x[i] ** (j + 1)
+            # ret_vec[3 * i + j] = x[i] ** (j + 1)
+            # ガウス基底
+            mu = 0.25 * i - 0.75
+            s  = 0.25
+            math.exp(- ((x[i] - mu) ** 2) / (2 * (s ** 2)))
     # 最後にバイアスの項
     ret_vec[-1] = 1
     return np.array(ret_vec, dtype=float).T
-
-# 損失関数
-def loss_func():
-    pass
 
 # オンライン学習器 順方向
 def online_func_forward(phi, W):
@@ -57,8 +57,8 @@ def online_func_learning(phi, t, W):
     # 式 W' = W + η(t - Wφ)φ
     # η = 1 / dot(φ, φ) なら η(t - Wφ)φ = (t - y) * φT / dot(φ, φ)
     y   = online_func_forward(phi, W)
-    eta = 1 / np.dot(phi, phi)
-    r   = 0.1 * W
+    eta = 0.8 / np.dot(phi, phi)
+    r   = 0.3 * W
     new_W = W + eta * (t - y) * phi - r
     return y, new_W
 
@@ -72,7 +72,7 @@ def learning(W):
     # 学習
     for i in range(count):
         # 入力と正解のデータを適当に生成
-        x   = np.array([4 * random.random() - 2 for _ in range(xN)], dtype=float)
+        x   = np.array([1 * random.random() - 0.5 for _ in range(xN)], dtype=float)
         phi = basis_func(x)
         t   = correct_func(x) + 0.5 * random.random()
         # 学習器に読ませる
@@ -87,6 +87,7 @@ def learning(W):
 
 # 実行
 if __name__ == "__main__":
+    plot_correct_func()
     # 学習する重みWを用意して学習
     learn_W = np.array([random.random() for _ in range(xN * term_num + 1)], dtype=float)
     learning(learn_W)
