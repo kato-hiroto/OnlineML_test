@@ -13,7 +13,7 @@ def correct_func(x):
     # 重みを適当に決定
     w = np.array([math.sin((i + 1) * 607.0 / 991.0) for i in range(xN)], dtype=float)
     # 式 y = cos(dot(w, x))
-    y = math.cos(0.5 * math.pi * np.dot(w, x))
+    y = 10 * math.cos(0.5 * math.pi * np.dot(w, x))
     return y
 
 # 関数の描画 説明変数はx=0のみ
@@ -39,8 +39,9 @@ def basis_func(x):
             # 多項式近似
             # ret_vec[3 * i + j] = x[i] ** (j + 1)
             # ガウス基底
-            mu = 0.25 * i - 0.75
-            s  = 0.25
+            param = 2 / (term_num + 1)
+            mu = param * (j + 0.5 - term_num / 2)
+            s  = param
             math.exp(- ((x[i] - mu) ** 2) / (2 * (s ** 2)))
     # 最後にバイアスの項
     ret_vec[-1] = 1
@@ -58,7 +59,7 @@ def online_func_learning(phi, t, W):
     # η = 1 / dot(φ, φ) なら η(t - Wφ)φ = (t - y) * φT / dot(φ, φ)
     y   = online_func_forward(phi, W)
     eta = 0.8 / np.dot(phi, phi)
-    r   = 0.3 * W
+    r   = 0.2 * W
     new_W = W + eta * (t - y) * phi - r
     return y, new_W
 
@@ -72,9 +73,9 @@ def learning(W):
     # 学習
     for i in range(count):
         # 入力と正解のデータを適当に生成
-        x   = np.array([1 * random.random() - 0.5 for _ in range(xN)], dtype=float)
+        x   = np.array([2 * random.random() - 1 for _ in range(xN)], dtype=float)
         phi = basis_func(x)
-        t   = correct_func(x) + 0.5 * random.random()
+        t   = correct_func(x) + 0 * random.random()
         # 学習器に読ませる
         y, W = online_func_learning(phi, t, W)
         # データ対の保存
@@ -82,12 +83,13 @@ def learning(W):
         teach_t[i] = t
     # プロット
     cutoff = 40
-    plt.scatter(np.array(range(cutoff, count)), (teach_t - try_y)[cutoff:] ** 2, s=8)
+    plt.scatter(np.array(range(cutoff, count)), (teach_t - try_y)[cutoff:], s=8)
     plt.show()
 
 # 実行
 if __name__ == "__main__":
-    plot_correct_func()
+    # 関数の概形表示
+    # plot_correct_func()
     # 学習する重みWを用意して学習
     learn_W = np.array([random.random() for _ in range(xN * term_num + 1)], dtype=float)
     learning(learn_W)
